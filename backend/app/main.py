@@ -50,11 +50,6 @@ async def call_llm(message: str) -> AnimationAndMessage:
     return result
 
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Anime API"}
-
-
 @app.get("/chat")
 async def chat(message: str):
     result = await call_llm(message)

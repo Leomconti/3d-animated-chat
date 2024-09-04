@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 interface ChatProps {
   onAnimationChange: (animation: string) => void;
@@ -7,6 +7,13 @@ interface ChatProps {
 const Chat: React.FC<ChatProps> = ({ onAnimationChange }) => {
   const [messages, setMessages] = useState<Array<{ text: string; sender: "user" | "ai" }>>([]);
   const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -30,35 +37,84 @@ const Chat: React.FC<ChatProps> = ({ onAnimationChange }) => {
   };
 
   return (
-    <div className="chat-container" style={{ width: "40%", padding: "20px" }}>
+    <div
+      className="chat-container"
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        pointerEvents: "auto",
+        padding: "20px",
+        boxSizing: "border-box",
+      }}
+    >
       <div
         className="messages"
-        style={{ height: "400px", overflowY: "auto", marginBottom: "20px", border: "1px solid #ccc", padding: "10px" }}
+        style={{
+          maxHeight: "70%",
+          overflowY: "auto",
+          marginBottom: "20px",
+          background: "rgba(255, 255, 255, 0.1)",
+          borderRadius: "15px",
+          padding: "15px",
+          backdropFilter: "blur(10px)",
+        }}
       >
         {messages.map((msg, index) => (
-          <div key={index} style={{ marginBottom: "10px", textAlign: msg.sender === "user" ? "right" : "left" }}>
+          <div
+            key={index}
+            style={{
+              marginBottom: "10px",
+              textAlign: msg.sender === "user" ? "right" : "left",
+            }}
+          >
             <span
               style={{
-                background: msg.sender === "user" ? "#007bff" : "#28a745",
+                background: msg.sender === "user" ? "rgba(0, 123, 255, 0.7)" : "rgba(40, 167, 69, 0.7)",
                 color: "white",
-                padding: "5px 10px",
-                borderRadius: "10px",
+                padding: "8px 12px",
+                borderRadius: "15px",
+                display: "inline-block",
+                maxWidth: "70%",
+                wordWrap: "break-word",
               }}
             >
               {msg.text}
             </span>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
       <div className="input-area" style={{ display: "flex" }}>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-          style={{ flexGrow: 1, marginRight: "10px", padding: "5px" }}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          style={{
+            flexGrow: 1,
+            marginRight: "10px",
+            padding: "10px",
+            borderRadius: "20px",
+            border: "none",
+            background: "rgba(255, 255, 255, 0.2)",
+            color: "white",
+          }}
+          placeholder="Type your message..."
         />
-        <button onClick={sendMessage} style={{ padding: "5px 10px" }}>
+        <button
+          onClick={sendMessage}
+          style={{
+            padding: "10px 20px",
+            borderRadius: "20px",
+            border: "none",
+            background: "rgba(0, 123, 255, 0.7)",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
           Send
         </button>
       </div>
