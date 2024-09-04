@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Text } from "@react-three/drei";
 import Model from "./Model";
@@ -25,10 +25,15 @@ const FallbackComponent: React.FC<{ error: Error }> = ({ error }) => (
 const App: React.FC = () => {
   const [modelPath] = useState("/models/my_model.glb");
   const [currentAnimation, setCurrentAnimation] = useState<string | null>("Idle");
+  const [animations, setAnimations] = useState<string[]>([]);
 
-  const handleAnimationChange = (animation: string) => {
+  const handleAnimationChange = (animation: string | null) => {
     setCurrentAnimation(animation);
   };
+
+  const handleAnimationsLoaded = useCallback((loadedAnimations: string[]) => {
+    setAnimations(loadedAnimations);
+  }, []);
 
   return (
     <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
@@ -39,7 +44,11 @@ const App: React.FC = () => {
         <spotLight position={[5, 5, 5]} angle={0.15} penumbra={1} castShadow intensity={2} />
         <Suspense fallback={null}>
           <ErrorBoundary FallbackComponent={FallbackComponent}>
-            <Model modelPath={modelPath} currentAnimation={currentAnimation} />
+            <Model
+              modelPath={modelPath}
+              currentAnimation={currentAnimation}
+              onAnimationsLoaded={handleAnimationsLoaded}
+            />
           </ErrorBoundary>
           <ErrorBoundary FallbackComponent={FallbackComponent}>
             <Car />
@@ -69,13 +78,61 @@ const App: React.FC = () => {
         style={{
           position: "absolute",
           top: 0,
+          left: 0,
+          width: "20%",
+          height: "100%",
+          background: "rgba(0, 0, 0, 0.5)",
+          color: "white",
+          padding: "20px",
+          overflowY: "auto",
+          boxSizing: "border-box",
+          maxHeight: "100vh",
+        }}
+      >
+        <h3>Animation Controls</h3>
+        {animations.map((anim) => (
+          <button
+            key={anim}
+            onClick={() => handleAnimationChange(anim)}
+            style={{
+              display: "block",
+              margin: "5px 0",
+              padding: "5px 10px",
+              background: currentAnimation === anim ? "rgba(0, 123, 255, 0.7)" : "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            {anim}
+          </button>
+        ))}
+        <button
+          onClick={() => handleAnimationChange(null)}
+          style={{
+            display: "block",
+            margin: "5px 0",
+            padding: "5px 10px",
+            background: "rgba(255, 0, 0, 0.7)",
+            border: "none",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Stop All Animations
+        </button>
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
           right: 0,
           width: "30%",
           height: "100%",
           pointerEvents: "none",
         }}
       >
-        <Chat onAnimationChange={handleAnimationChange} />
+        <Chat onAnimationChange={handleAnimationChange} animations={animations} />
       </div>
     </div>
   );

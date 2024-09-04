@@ -12,13 +12,18 @@ type GLTFResult = GLTF & {
 interface ModelProps {
   modelPath: string;
   currentAnimation: string | null;
+  onAnimationsLoaded: (animations: string[]) => void;
 }
 
-const Model: React.FC<ModelProps> = ({ modelPath, currentAnimation }) => {
+const Model: React.FC<ModelProps> = ({ modelPath, currentAnimation, onAnimationsLoaded }) => {
   const group = useRef<THREE.Group>(null);
   const { nodes, animations } = useGLTF(modelPath) as GLTFResult;
   const { actions, names } = useAnimations(animations, group);
   const [previousAnimation, setPreviousAnimation] = useState<string | null>(null);
+
+  useEffect(() => {
+    onAnimationsLoaded(names);
+  }, [names, onAnimationsLoaded]);
 
   useEffect(() => {
     if (currentAnimation && actions[currentAnimation]) {
@@ -26,12 +31,13 @@ const Model: React.FC<ModelProps> = ({ modelPath, currentAnimation }) => {
       const nextAction = actions[currentAnimation];
 
       if (prevAction) {
-        // Fade out the previous animation
         prevAction.fadeOut(0.5);
       }
-      // Fade in the new animation
       nextAction.reset().fadeIn(0.5).play();
       setPreviousAnimation(currentAnimation);
+    } else if (currentAnimation === null) {
+      // Stop all animations when currentAnimation is null
+      Object.values(actions).forEach((action) => action?.stop());
     }
   }, [actions, currentAnimation, previousAnimation]);
 
@@ -40,15 +46,6 @@ const Model: React.FC<ModelProps> = ({ modelPath, currentAnimation }) => {
       group.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.3;
     }
   });
-
-  // Set up a default animation if none is playing
-  useEffect(() => {
-    if (names.length > 0 && !currentAnimation) {
-      const defaultAnimation = names[0]; // Default to first animation ( Idle )
-      actions[defaultAnimation]?.play();
-      setPreviousAnimation(defaultAnimation);
-    }
-  }, [actions, names, currentAnimation]);
 
   return (
     <>

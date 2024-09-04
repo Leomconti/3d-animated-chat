@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 
 interface ChatProps {
   onAnimationChange: (animation: string) => void;
+  animations: string[];
 }
 
-const Chat: React.FC<ChatProps> = ({ onAnimationChange }) => {
+const Chat: React.FC<ChatProps> = ({ onAnimationChange, animations }) => {
   const [messages, setMessages] = useState<Array<{ text: string; sender: "user" | "ai" }>>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -23,14 +24,25 @@ const Chat: React.FC<ChatProps> = ({ onAnimationChange }) => {
     setInput("");
 
     try {
-      const response = await fetch(`http://localhost:8000/chat?message=${encodeURIComponent(input)}`);
+      const response = await fetch(`http://localhost:8000/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: input,
+          animations: animations,
+        }),
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       const aiMessage = { text: data.message, sender: "ai" as const };
       setMessages((prev) => [...prev, aiMessage]);
-      onAnimationChange(data.animation_name);
+      if (data.animation_name && animations.includes(data.animation_name)) {
+        onAnimationChange(data.animation_name);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     }
