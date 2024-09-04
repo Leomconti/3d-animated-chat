@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { useDrag } from "@use-gesture/react";
 
@@ -7,7 +7,12 @@ interface Message {
   sender: "user" | "ai";
 }
 
-export default function DraggableChat() {
+interface DraggableChatProps {
+  onAnimationChange: (animation: string | null) => void;
+  animations: string[];
+}
+
+export default function DraggableChat({ onAnimationChange, animations }: DraggableChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
@@ -18,14 +23,37 @@ export default function DraggableChat() {
     api.start({ x: ox, y: oy, immediate: true });
   });
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (input.trim()) {
-      setMessages([...messages, { text: input, sender: "user" }]);
+      setMessages((prev) => [...prev, { text: input, sender: "user" }]);
       setInput("");
-      // Simulate AI response
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { text: "I'm an AI response!", sender: "ai" }]);
-      }, 1000);
+
+      try {
+        const response = await fetch("http://localhost:8000/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: input,
+            animations: animations,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setMessages((prev) => [...prev, { text: data.message, sender: "ai" }]);
+
+        if (data.animation_name && animations.includes(data.animation_name)) {
+          onAnimationChange(data.animation_name);
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+        setMessages((prev) => [...prev, { text: "Error: Could not get a response.", sender: "ai" }]);
+      }
     }
   };
 
@@ -78,7 +106,7 @@ export default function DraggableChat() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
           style={{ flex: 1, marginRight: 10, padding: 5, borderRadius: 5, border: "none" }}
         />
         <button
