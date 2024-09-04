@@ -1,8 +1,8 @@
 import React, { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import Model from "./Model";
 import Chat from "./Chat";
+import Model from "./Model";
 
 const App: React.FC = () => {
   const [modelPath] = useState("/models/my_model.glb");
