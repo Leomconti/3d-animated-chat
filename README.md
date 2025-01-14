@@ -4,7 +4,9 @@ Use LLMs to produce reactions that go to the 3D model based on intent from chat 
 Frontend with React, Typescript, React-Three-Fiber,
 Backend with fastapi, OpenAI api, instructor
 
-I wanted to do an application with 3D characters, chat with LLMs and animations, so I did this poc
+I wanted to do an application with 3D characters, chat with LLMs and animations, so I did this poc.
+
+(Despite the animation controls in the screen they were being triggered by the LLM from the backend)
 
 <img width="1753" alt="image" src="https://github.com/user-attachments/assets/4b88f781-c3e1-4e84-9a37-00e88c24b557" />
 
